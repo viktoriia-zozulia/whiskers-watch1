@@ -3,6 +3,13 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun --watch index.ts",
+    "start": "bun index.ts",
+    "migrate": "bun src/db/migrations/migrate.ts",
+    "seed": "bun src/db/migrations/seed.ts",
+    "drop": "bun src/db/migrations/drop.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/pg": "^8.20.0"
@@ -11,6 +18,8 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "elysia": "^1.3.2",
+    "@elysiajs/cors": "^1.3.3",
     "kysely": "^0.29.2",
     "pg": "^8.21.0"
   }

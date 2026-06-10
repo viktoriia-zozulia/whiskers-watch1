@@ -1,41 +1,31 @@
-import { serve } from "bun";
-import index from "./index.html";
+import { serve } from 'bun'
+import index from './index.html'
+
+const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:3001'
 
 const server = serve({
   routes: {
-    // Serve index.html for all unmatched routes.
-    "/*": index,
+    // Proxy all /api/* requests to the backend
+    '/api/*': async (req: Request) => {
+      const url = new URL(req.url)
+      const backendUrl = `${BACKEND}${url.pathname}${url.search}`
 
-    "/api/hello": {
-      async GET(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "GET",
-        });
-      },
-      async PUT(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "PUT",
-        });
-      },
+      const isBodyless = req.method === 'GET' || req.method === 'HEAD'
+      return fetch(backendUrl, {
+        method: req.method,
+        headers: req.headers,
+        body: isBodyless ? undefined : await req.arrayBuffer(),
+      })
     },
 
-    "/api/hello/:name": async req => {
-      const name = req.params.name;
-      return Response.json({
-        message: `Hello, ${name}!`,
-      });
-    },
+    // Serve the React SPA for all other routes
+    '/*': index,
   },
 
-  development: process.env.NODE_ENV !== "production" && {
-    // Enable browser hot reloading in development
+  development: process.env.NODE_ENV !== 'production' && {
     hmr: true,
-
-    // Echo console logs from the browser to the server
     console: true,
   },
-});
+})
 
-console.log(`🚀 Server running at ${server.url}`);
+console.log(`🐾 WhiskersWatch frontend → ${server.url}   (API proxy → ${BACKEND})`)
