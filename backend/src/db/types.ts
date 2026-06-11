@@ -3,8 +3,9 @@ import type { Generated } from 'kysely'
 export interface UsersTable {
   id: Generated<number>
   email: string
-  password_hash: string
+  password_hash: string | null
   name: string
+  google_id: string | null
 }
 
 export interface UserSettingsTable {

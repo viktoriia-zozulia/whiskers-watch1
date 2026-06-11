@@ -7,6 +7,7 @@ import { recordRoutes } from './record.routes'
 import { measurementRoutes } from './measurement.routes'
 import { vetContactRoutes } from './vetContact.routes'
 import { settingsRoutes } from './settings.routes'
+import { notificationRoutes } from './notification.routes'
 
 /** Mounts every entity's controller under a single plugin. */
 export const routes = new Elysia()
@@ -18,3 +19,4 @@ export const routes = new Elysia()
   .use(measurementRoutes)
   .use(vetContactRoutes)
   .use(settingsRoutes)
+  .use(notificationRoutes)

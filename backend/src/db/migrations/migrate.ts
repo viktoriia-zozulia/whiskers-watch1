@@ -114,6 +114,11 @@ async function runMigration() {
     await sql`ALTER TABLE medical_records ADD COLUMN IF NOT EXISTS photo_url text`.execute(db)
     console.log('Optional columns (photo_url) ensured.')
 
+    // 9. Google OAuth support: nullable password (social-only users) + google_id
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id varchar`.execute(db)
+    await sql`ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL`.execute(db)
+    console.log('Google OAuth columns ensured.')
+
     console.log('Database migration completed successfully.')
   } catch (error) {
     console.error('Migration failed with error:', error)

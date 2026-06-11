@@ -2,16 +2,20 @@ import { Elysia } from 'elysia'
 import { authMiddleware } from '../middlewares/auth'
 import { petService } from '../services/pet.service'
 import { recordService } from '../services/record.service'
-import { createRecordBody } from '../schemas/record.schema'
+import { createRecordBody, listRecordsQuery } from '../schemas/record.schema'
 
 export const recordRoutes = new Elysia()
   .use(authMiddleware)
 
-  .get('/api/pets/:id/records', async ({ userId, params, status }) => {
-    const pet = await petService.findOwned(Number(params.id), userId!)
-    if (!pet) return status(404, { error: 'Улюбленця не знайдено' })
-    return recordService.listByPet(Number(params.id))
-  })
+  .get(
+    '/api/pets/:id/records',
+    async ({ userId, params, query, status }) => {
+      const pet = await petService.findOwned(Number(params.id), userId!)
+      if (!pet) return status(404, { error: 'Улюбленця не знайдено' })
+      return recordService.listByPet(Number(params.id), { type: query.type, search: query.search })
+    },
+    { query: listRecordsQuery },
+  )
 
   .post(
     '/api/pets/:id/records',

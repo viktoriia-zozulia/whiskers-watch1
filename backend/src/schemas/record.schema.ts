@@ -5,3 +5,9 @@ export const createRecordBody = t.Object({
   text: t.Optional(t.String()),
   photo_url: t.Optional(t.String()),
 })
+
+// Optional server-side filters for the medical history listing.
+export const listRecordsQuery = t.Object({
+  type: t.Optional(t.String()),
+  search: t.Optional(t.String()),
+})

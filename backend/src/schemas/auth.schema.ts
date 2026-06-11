@@ -10,3 +10,7 @@ export const loginBody = t.Object({
   email: t.String(),
   password: t.String(),
 })
+
+export const googleBody = t.Object({
+  credential: t.String({ minLength: 1 }),
+})

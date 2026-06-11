@@ -1,10 +1,24 @@
 import { db } from '../db'
 
+export interface RecordFilters {
+  type?: string
+  search?: string
+}
+
 export const recordService = {
-  listByPet(petId: number) {
-    return db
+  listByPet(petId: number, filters: RecordFilters = {}) {
+    let query = db
       .selectFrom('medical_records')
       .where('pet_id', '=', petId)
+
+    if (filters.type) {
+      query = query.where('record_type', '=', filters.type)
+    }
+    if (filters.search) {
+      query = query.where('text', 'ilike', `%${filters.search}%`)
+    }
+
+    return query
       .selectAll()
       .orderBy('record_date', 'desc')
       .execute()
