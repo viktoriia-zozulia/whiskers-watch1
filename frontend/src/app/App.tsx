@@ -6,11 +6,10 @@ import { useAuth } from '../hooks/useAuth'
 import { usePet } from '../hooks/usePet'
 import { ToastHost } from '../shared/ui/ToastHost'
 import { ErrorBoundary } from '../shared/ui/ErrorBoundary'
-import { AuthPage } from '../pages/AuthPage'
+import { LandingPage } from '../pages/LandingPage'
 import { WelcomePage } from '../pages/WelcomePage'
 import { AppLayout } from './AppLayout'
 import { AddPetModal } from '../features/pets/AddPetModal'
-import '../index.css'
 
 function FullScreenLoader() {
   return (
@@ -47,7 +46,7 @@ function Routed() {
       </div>
     )
   }
-  if (!user) return <AuthPage />
+  if (!user) return <LandingPage />
   return (
     <PetProvider>
       <NavProvider>
@@ -68,4 +67,3 @@ export function App() {
   )
 }
 
-export default App

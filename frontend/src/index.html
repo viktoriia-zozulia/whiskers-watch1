@@ -5,7 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>" />
     <title>WhiskersWatch — Моніторинг здоров'я тварин</title>
-    <script type="module" src="./frontend.tsx" async></script>
+    <meta name="description" content="WhiskersWatch — медична картка, графік ваги, нагадування та розумний аналіз здоров'я ваших домашніх тварин." />
+    <meta name="theme-color" content="#14b8a6" />
+    <meta property="og:title" content="WhiskersWatch — здоров'я улюбленця під контролем" />
+    <meta property="og:description" content="Медична картка, графік ваги, нагадування та WhiskersAI-аналіз стану тварини." />
+    <script>
+      // Apply the saved / system theme before first paint (no white flash).
+      try {
+        var t = localStorage.getItem('ww_theme');
+        if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    </script>
+    <script type="module" src="./main.tsx" async></script>
   </head>
   <body>
     <div id="root"></div>

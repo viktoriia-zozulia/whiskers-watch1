@@ -119,9 +119,35 @@ async function runMigration() {
     await sql`ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL`.execute(db)
     console.log('Google OAuth columns ensured.')
 
+    // 10. One-click demo sandboxes: flag + timestamp so stale ones can be purged
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_demo boolean NOT NULL DEFAULT false`.execute(db)
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now()`.execute(db)
+    console.log('Demo account columns ensured.')
+
+    // 11. Uploaded images live in Postgres, so the app works on hosts with an
+    //     ephemeral filesystem and a user's photos are deleted with the user.
+    await sql`
+      CREATE TABLE IF NOT EXISTS uploads (
+        name varchar PRIMARY KEY,
+        user_id integer REFERENCES users(id) ON DELETE CASCADE,
+        mime varchar NOT NULL,
+        data bytea NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )`.execute(db)
+    console.log('Table "uploads" ensured.')
+
+    // 12. Indexes for the hot per-pet / per-user lookups
+    await sql`CREATE INDEX IF NOT EXISTS pets_user_id_idx ON pets (user_id)`.execute(db)
+    await sql`CREATE INDEX IF NOT EXISTS tasks_pet_id_time_idx ON tasks (pet_id, task_time)`.execute(db)
+    await sql`CREATE INDEX IF NOT EXISTS records_pet_id_date_idx ON medical_records (pet_id, record_date DESC)`.execute(db)
+    await sql`CREATE INDEX IF NOT EXISTS measurements_pet_id_date_idx ON measurements (pet_id, date_measured DESC)`.execute(db)
+    await sql`CREATE INDEX IF NOT EXISTS vet_contacts_user_id_idx ON vet_contacts (user_id)`.execute(db)
+    console.log('Indexes ensured.')
+
     console.log('Database migration completed successfully.')
   } catch (error) {
     console.error('Migration failed with error:', error)
+    process.exitCode = 1
   } finally {
     await db.destroy()
   }

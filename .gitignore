@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.DS_Store
+
+# Local build / data artifacts — never commit these
+*.tar.gz
+*.zip
+*.sql
+backend/server.js
+backend/uploads

@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
 import { ImagePlus, Loader2, Send, X } from 'lucide-react'
-import { uploadFile } from '../../http_client'
+import { uploadFile } from '../../api'
 import { usePet } from '../../hooks/usePet'
 import { run } from '../../shared/lib/toast'
+import { RECORD_TYPES } from '../medical/RecordFilter'
 
 export function QuickNote() {
   const { currentPet, createNote } = usePet()
@@ -10,6 +11,7 @@ export function QuickNote() {
   const [notePhoto, setNotePhoto] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [type, setType] = useState(RECORD_TYPES[0]!)
   const fileRef = useRef<HTMLInputElement>(null)
 
   async function pickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -26,18 +28,26 @@ export function QuickNote() {
     e.preventDefault()
     if (!quickNote.trim() && !notePhoto) return
     setSaving(true)
-    const ok = await createNote(quickNote, notePhoto)
+    const ok = await createNote(quickNote, notePhoto, type)
     setSaving(false)
-    if (ok) { setQuickNote(''); setNotePhoto(null) }
+    if (ok) { setQuickNote(''); setNotePhoto(null); setType(RECORD_TYPES[0]!) }
   }
 
   return (
     <section>
-      <h2 className="text-lg md:text-xl font-bold mb-4">Швидкий запис стану</h2>
+      <h2 className="text-lg md:text-xl font-bold mb-3">Швидкий запис стану</h2>
+      <div className="flex flex-wrap gap-2 mb-3" role="radiogroup" aria-label="Тип запису">
+        {RECORD_TYPES.map(t => (
+          <button key={t} type="button" role="radio" aria-checked={type === t} onClick={() => setType(t)}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${type === t ? 'bg-teal-500 text-white' : 'bg-white border border-slate-200 text-slate-500 hover:border-teal-300'}`}>
+            {t}
+          </button>
+        ))}
+      </div>
       {notePhoto && (
         <div className="mb-3 relative inline-block">
           <img src={notePhoto} alt="" className="h-24 rounded-xl border border-slate-200 object-cover" />
-          <button onClick={() => setNotePhoto(null)}
+          <button onClick={() => setNotePhoto(null)} aria-label="Прибрати фото"
             className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 shadow hover:text-red-500">
             <X size={13} />
           </button>
@@ -45,7 +55,7 @@ export function QuickNote() {
       )}
       <form onSubmit={submit}
         className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-1 focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-50 transition-all">
-        <button type="button" onClick={() => fileRef.current?.click()}
+        <button type="button" onClick={() => fileRef.current?.click()} aria-label="Додати фото"
           className="w-10 h-10 shrink-0 rounded-xl text-slate-400 hover:text-teal-600 hover:bg-teal-50 flex items-center justify-center transition-colors">
           {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={20} />}
         </button>

@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
 import { authMiddleware } from '../middlewares/auth'
+import { idParams } from '../schemas/common.schema'
 import { petService } from '../services/pet.service'
 import { measurementService } from '../services/measurement.service'
 import { createMeasurementBody } from '../schemas/measurement.schema'
@@ -11,7 +12,7 @@ export const measurementRoutes = new Elysia()
     const pet = await petService.findOwned(Number(params.id), userId!)
     if (!pet) return status(404, { error: 'Улюбленця не знайдено' })
     return measurementService.listByPet(Number(params.id))
-  })
+  }, idParams)
 
   .post(
     '/api/pets/:id/measurements',
@@ -20,5 +21,5 @@ export const measurementRoutes = new Elysia()
       if (!pet) return status(404, { error: 'Улюбленця не знайдено' })
       return measurementService.create(Number(params.id), body)
     },
-    { body: createMeasurementBody },
+    { ...idParams, body: createMeasurementBody },
   )

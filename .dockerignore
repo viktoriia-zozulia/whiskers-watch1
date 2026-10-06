@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+backend/uploads
+backend/server.js
+**/*.tar.gz
+**/*.zip
+**/*.sql
+.git
+.github
+docs

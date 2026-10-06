@@ -1,15 +1,33 @@
-@import "../styles/globals.css";
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* `dark:` utilities follow the .dark class on <html> (see shared/lib/theme.ts) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Onest Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Lora Variable", Georgia, "Times New Roman", serif;
+
+  /* Landing-page surfaces: warm paper and near-black ink (remapped in .dark) */
+  --color-paper: oklch(97.5% 0.008 85);
+  --color-paper-deep: oklch(94% 0.014 85);
+  --color-ink: oklch(24% 0.02 200);
+}
 
 @layer base {
-  :root {
-    @apply font-sans;
+  html {
+    @apply font-sans antialiased;
   }
 
   body {
     @apply m-0 bg-slate-50 text-slate-800 min-w-[320px] min-h-screen;
   }
 
-  /* lighter placeholder text across all inputs */
+  /* Default colour for bare `border` utilities */
+  *, ::before, ::after {
+    border-color: var(--color-slate-200);
+  }
+
   ::placeholder {
     @apply text-slate-300;
   }
@@ -24,4 +42,79 @@
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* ───────────────────────────── Dark theme ──────────────────────────────────
+   Tailwind v4 exposes every palette colour as a CSS variable, so instead of
+   sprinkling `dark:` variants over every component we re-map the palette:
+   the slate scale is inverted, light tints become translucent dark tints and
+   dark text shades become light. Components stay theme-agnostic. */
+.dark {
+  color-scheme: dark;
+
+  --color-paper: oklch(16% 0.015 230);
+  --color-paper-deep: oklch(20% 0.018 230);
+  --color-ink: oklch(94% 0.012 85);
+
+  --color-slate-50: oklch(17% 0.03 265);
+  --color-slate-100: oklch(25% 0.035 262);
+  --color-slate-200: oklch(31% 0.04 260);
+  --color-slate-300: oklch(43% 0.04 257);
+  --color-slate-400: oklch(63% 0.04 257);
+  --color-slate-500: oklch(71% 0.035 256);
+  --color-slate-600: oklch(79% 0.025 255);
+  --color-slate-700: oklch(87% 0.02 253);
+  --color-slate-800: oklch(93% 0.013 255);
+  --color-slate-900: oklch(97% 0.007 248);
+
+  --color-teal-50: oklch(40% 0.07 185 / 0.22);
+  --color-teal-100: oklch(45% 0.08 185 / 0.35);
+  --color-teal-200: oklch(50% 0.08 185 / 0.45);
+  --color-teal-700: oklch(82% 0.12 182);
+  --color-teal-800: oklch(88% 0.1 182);
+
+  --color-emerald-50: oklch(40% 0.08 165 / 0.22);
+  --color-emerald-200: oklch(50% 0.09 165 / 0.35);
+
+  --color-blue-50: oklch(42% 0.1 255 / 0.22);
+  --color-blue-100: oklch(45% 0.1 255 / 0.35);
+  --color-blue-200: oklch(52% 0.1 255 / 0.45);
+  --color-blue-700: oklch(82% 0.1 255);
+  --color-blue-800: oklch(88% 0.08 255);
+
+  --color-orange-50: oklch(45% 0.1 50 / 0.22);
+  --color-orange-100: oklch(50% 0.1 50 / 0.35);
+  --color-orange-700: oklch(83% 0.12 55);
+
+  --color-amber-50: oklch(50% 0.1 75 / 0.2);
+  --color-amber-200: oklch(58% 0.1 75 / 0.4);
+  --color-amber-700: oklch(85% 0.13 80);
+
+  --color-red-50: oklch(45% 0.12 25 / 0.22);
+  --color-red-100: oklch(50% 0.13 25 / 0.35);
+  --color-red-200: oklch(55% 0.13 25 / 0.45);
+  --color-red-700: oklch(80% 0.12 25);
+  --color-red-800: oklch(86% 0.1 25);
+
+  --color-purple-50: oklch(42% 0.1 300 / 0.22);
+}
+
+/* `white` must stay white for text on coloured buttons, so only the white
+   surfaces are re-coloured. */
+.dark .bg-white { background-color: oklch(21% 0.035 264); }
+.dark .bg-white\/80 { background-color: oklch(21% 0.035 264 / 0.8); }
+.dark .border-white { border-color: oklch(21% 0.035 264); }
+.dark .shadow-sm, .dark .shadow-md, .dark .shadow-lg, .dark .shadow-xl, .dark .shadow-2xl {
+  --tw-shadow-color: rgb(0 0 0 / 0.35);
+}
+
+/* ─────────────────────────── Print: health passport ─────────────────────── */
+/* The passport is portalled into #print-root; when printing, it is the only
+   thing on the page (the app itself and any open modal are hidden). */
+#print-root { display: none; }
+@media print {
+  @page { margin: 14mm; }
+  body { background: white !important; }
+  body > *:not(#print-root) { display: none !important; }
+  #print-root { display: block; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

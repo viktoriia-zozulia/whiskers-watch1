@@ -2,6 +2,14 @@ import nodemailer from 'nodemailer'
 import { db } from '../db'
 import { config, isSmtpEnabled } from '../config/env'
 
+// Every user-provided value is escaped before it goes into the email HTML.
+export function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+const e = escapeHtml
+
 function fmtDate(d: Date | string) {
   return new Date(d).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })
 }
@@ -45,16 +53,16 @@ export const notificationService = {
         .select(['record_type', 'text', 'record_date']).execute()
 
       const taskHtml = upcoming.length
-        ? `<ul>${upcoming.map(t => `<li>${fmtDate(t.task_time)} — <b>${t.title}</b> (${t.type})</li>`).join('')}</ul>`
+        ? `<ul>${upcoming.map(t => `<li>${fmtDate(t.task_time)} — <b>${e(t.title)}</b> (${e(t.type)})</li>`).join('')}</ul>`
         : '<p style="color:#888">Немає запланованих завдань 🎉</p>'
 
       sections.push(`
         <div style="margin:20px 0;padding:16px;border:1px solid #e2e8f0;border-radius:14px">
-          <h3 style="margin:0 0 8px">🐾 ${pet.name} <span style="color:#888;font-weight:normal">(${pet.species})</span></h3>
+          <h3 style="margin:0 0 8px">🐾 ${e(pet.name)} <span style="color:#888;font-weight:normal">(${e(pet.species)})</span></h3>
           ${lastWeight ? `<p style="margin:4px 0">Вага: <b>${lastWeight.weight_kg} кг</b> (${fmtDate(lastWeight.date_measured)})</p>` : ''}
           <p style="margin:8px 0 4px;font-weight:600">Завдання на тиждень:</p>
           ${taskHtml}
-          ${recentRecords.length ? `<p style="margin:8px 0 4px;font-weight:600">Останні записи:</p><ul>${recentRecords.map(r => `<li>${r.record_type}: ${r.text || '—'}</li>`).join('')}</ul>` : ''}
+          ${recentRecords.length ? `<p style="margin:8px 0 4px;font-weight:600">Останні записи:</p><ul>${recentRecords.map(r => `<li>${e(r.record_type)}: ${e(r.text || '—')}</li>`).join('')}</ul>` : ''}
         </div>`)
 
       textLines.push(`🐾 ${pet.name} (${pet.species})`)
@@ -66,7 +74,7 @@ export const notificationService = {
     const html = `
       <div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;color:#1e293b">
         <h2 style="color:#0d9488">WhiskersWatch — тижневий звіт</h2>
-        <p>Привіт, ${user.name || 'друже'}! Ось що відбувається зі здоров'ям ваших улюбленців.</p>
+        <p>Привіт, ${e(user.name || 'друже')}! Ось що відбувається зі здоров'ям ваших улюбленців.</p>
         ${pets.length ? sections.join('') : '<p>У вас ще немає улюбленців.</p>'}
         <p style="color:#94a3b8;font-size:12px;margin-top:24px">Ви отримали цей лист, бо увімкнули email-розсилку в налаштуваннях WhiskersWatch.</p>
       </div>`

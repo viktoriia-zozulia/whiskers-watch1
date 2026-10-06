@@ -1,5 +1,6 @@
-import { createContext, useEffect, useState, type ReactNode } from 'react'
-import { clearToken, getToken, petsApi, setToken, type User } from '../http_client'
+import { createContext, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { authApi, clearToken, getToken, setToken, SESSION_EXPIRED_EVENT, type User } from '../api'
+import { toast } from '../shared/lib/toast'
 
 interface AuthContextValue {
   user: User | null
@@ -10,35 +11,34 @@ interface AuthContextValue {
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
-// Decode a JWT payload without verifying — used only to restore a session id.
-function decodeUserId(token: string): number | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/')))
-    return payload.userId ?? null
-  } catch {
-    return null
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [checking, setChecking] = useState(true)
+  const userRef = useRef(user)
+  userRef.current = user
 
+  // Restore the session (with the real name/email) on page load.
   useEffect(() => {
-    const token = getToken()
-    if (!token) { setChecking(false); return }
-    petsApi.list()
-      .then(() => {
-        const id = decodeUserId(token)
-        if (id != null) setUser({ id, email: '', name: '' })
-        else clearToken()
-      })
+    if (!getToken()) { setChecking(false); return }
+    authApi.me()
+      .then(setUser)
       .catch(() => clearToken())
       .finally(() => setChecking(false))
   }, [])
 
-  const login = (token: string, u: User) => { setToken(token); setUser(u) }
-  const logout = () => { clearToken(); setUser(null) }
+  // Any 401 from the API means the token is no longer valid.
+  useEffect(() => {
+    const onExpired = () => {
+      if (userRef.current) toast('Сесію завершено. Увійдіть знову.', 'info')
+      userRef.current = null // several requests may fail at once — toast only once
+      setUser(null)
+    }
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired)
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired)
+  }, [])
+
+  const login = useCallback((token: string, u: User) => { setToken(token); setUser(u) }, [])
+  const logout = useCallback(() => { clearToken(); setUser(null) }, [])
 
   return (
     <AuthContext.Provider value={{ user, checking, login, logout }}>

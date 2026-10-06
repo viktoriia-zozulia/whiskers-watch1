@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Bell, BellRing, Loader2, Mail, Send } from 'lucide-react'
-import { notificationsApi } from '../../http_client'
+import { notificationsApi } from '../../api'
 import { usePet } from '../../hooks/usePet'
 import { run, toast } from '../../shared/lib/toast'
 import {

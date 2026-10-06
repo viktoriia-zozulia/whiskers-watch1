@@ -15,7 +15,9 @@ export const recordService = {
       query = query.where('record_type', '=', filters.type)
     }
     if (filters.search) {
-      query = query.where('text', 'ilike', `%${filters.search}%`)
+      // Escape LIKE wildcards so searching for "50%" or "_" is literal.
+      const pattern = filters.search.replace(/[\\%_]/g, (c) => `\\${c}`)
+      query = query.where('text', 'ilike', `%${pattern}%`)
     }
 
     return query

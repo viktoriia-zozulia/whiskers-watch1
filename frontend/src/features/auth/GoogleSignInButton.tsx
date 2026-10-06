@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { authApi } from '../../http_client'
+import { useEffect, useRef } from 'react'
+import { authApi } from '../../api'
 import { useAuth } from '../../hooks/useAuth'
 import { toast } from '../../shared/lib/toast'
 
@@ -37,17 +37,9 @@ function loadGisScript(): Promise<void> {
   })
 }
 
-export function GoogleSignInButton() {
+export function GoogleSignInButton({ clientId }: { clientId: string }) {
   const { login } = useAuth()
-  const [clientId, setClientId] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
-
-  // Discover whether Google sign-in is enabled on the server.
-  useEffect(() => {
-    authApi.config()
-      .then(c => setClientId(c.googleClientId))
-      .catch(() => setClientId(''))
-  }, [])
 
   useEffect(() => {
     if (!clientId || !containerRef.current) return
@@ -79,14 +71,5 @@ export function GoogleSignInButton() {
 
   if (!clientId) return null
 
-  return (
-    <div className="mt-5">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="h-px bg-slate-200 flex-1" />
-        <span className="text-xs text-slate-400">або</span>
-        <div className="h-px bg-slate-200 flex-1" />
-      </div>
-      <div ref={containerRef} className="flex justify-center" />
-    </div>
-  )
+  return <div ref={containerRef} className="flex justify-center mt-4 min-h-[44px]" />
 }

@@ -1,6 +1,7 @@
 import { Plus, Scale } from 'lucide-react'
 import { usePet } from '../../hooks/usePet'
 import { WeightChart } from './WeightChart'
+import { parseDateOnly } from '../../shared/lib/format'
 
 export function WeightTracking() {
   const { measurements, openModal } = usePet()
@@ -34,7 +35,7 @@ export function WeightTracking() {
                     </p>
                     {m.notes && <p className="text-xs text-slate-400 mt-0.5">{m.notes}</p>}
                   </div>
-                  <span className="text-sm text-slate-400">{new Date(m.date_measured).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <span className="text-sm text-slate-400">{parseDateOnly(m.date_measured).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
               )
             })}

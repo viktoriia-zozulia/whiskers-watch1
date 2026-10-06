@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
 import { authMiddleware } from '../middlewares/auth'
+import { idParams } from '../schemas/common.schema'
 import { vetContactService } from '../services/vetContact.service'
 import { createVetContactBody, updateVetContactBody } from '../schemas/vetContact.schema'
 
@@ -23,7 +24,7 @@ export const vetContactRoutes = new Elysia({ prefix: '/api/vet-contacts' })
         phone: body.phone !== undefined ? body.phone : contact.phone,
       })
     },
-    { body: updateVetContactBody },
+    { ...idParams, body: updateVetContactBody },
   )
 
   .delete('/:id', async ({ userId, params, status }) => {
@@ -31,4 +32,4 @@ export const vetContactRoutes = new Elysia({ prefix: '/api/vet-contacts' })
     if (!contact) return status(404, { error: 'Контакт не знайдено' })
     await vetContactService.remove(Number(params.id))
     return { ok: true }
-  })
+  }, idParams)

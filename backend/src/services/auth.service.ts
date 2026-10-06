@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { db } from '../db'
 import { config } from '../config/env'
 import { hashPassword, verifyPassword } from '../utils/password'
@@ -8,9 +9,24 @@ interface GoogleProfile {
   name?: string
 }
 
+/** Emails are compared case-insensitively: `Vika@Mail.com` and `vika@mail.com` are one account. */
+export const normalizeEmail = (email: string) => email.trim().toLowerCase()
+
 export const authService = {
   findByEmail(email: string) {
-    return db.selectFrom('users').where('email', '=', email).selectAll().executeTakeFirst()
+    return db
+      .selectFrom('users')
+      .where(sql`lower(email)`, '=', normalizeEmail(email))
+      .selectAll()
+      .executeTakeFirst()
+  },
+
+  findPublicById(id: number) {
+    return db
+      .selectFrom('users')
+      .where('id', '=', id)
+      .select(['id', 'email', 'name', 'is_demo'])
+      .executeTakeFirst()
   },
 
   /** Creates a default settings row for a freshly created user. */
@@ -26,7 +42,7 @@ export const authService = {
     const password_hash = await hashPassword(data.password)
     const user = await db
       .insertInto('users')
-      .values({ email: data.email, password_hash, name: data.name })
+      .values({ email: normalizeEmail(data.email), password_hash, name: data.name.trim() })
       .returning(['id', 'email', 'name'])
       .executeTakeFirstOrThrow()
 
@@ -69,7 +85,7 @@ export const authService = {
     const user = await db
       .insertInto('users')
       .values({
-        email: profile.email,
+        email: normalizeEmail(profile.email),
         name: profile.name ?? profile.email.split('@')[0]!,
         password_hash: null,
         google_id: profile.sub,

@@ -1,0 +1,15 @@
+# Render Blueprint: New → Blueprint → pick this repo. DATABASE_URL is asked for
+# on first deploy (paste the Neon connection string); JWT_SECRET is generated.
+services:
+  - type: web
+    name: whiskers-watch
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TRUST_PROXY
+        value: "true"

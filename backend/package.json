@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "bun --watch index.ts",
     "start": "bun index.ts",
-    "migrate": "bun src/db/migrations/migrate.ts",
-    "seed": "bun src/db/migrations/seed.ts",
-    "drop": "bun src/db/migrations/drop.ts"
+    "migrate": "bun src/db/scripts/migrate.ts",
+    "seed": "bun src/db/scripts/seed.ts",
+    "drop": "bun src/db/scripts/drop.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit -p ."
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -1,15 +1,16 @@
 import {
-  createContext, useCallback, useEffect, useMemo, useState, type ReactNode,
+  createContext, useCallback, useEffect, useMemo, useRef, useState, type ReactNode,
 } from 'react'
 import {
   measurementsApi, petsApi, recordsApi, settingsApi, tasksApi, vetContactsApi,
   type CreateMeasurementDto, type CreatePetDto, type CreateTaskDto, type CreateVetContactDto,
   type Measurement, type MedicalRecord, type Pet, type Task, type UpdatePetDto,
   type UserSettings, type VetContact,
-} from '../http_client'
+} from '../api'
 import { run, toast } from '../shared/lib/toast'
+import { careStreak, selectTodayTasks } from '../shared/lib/tasks'
 
-type ModalKey = 'addPet' | 'addTask' | 'addVet' | 'addMeasurement'
+type ModalKey = 'addPet' | 'addTask' | 'addVet' | 'addMeasurement' | 'passport'
 
 interface PetContextValue {
   // data
@@ -25,6 +26,7 @@ interface PetContextValue {
   // derived
   todayTasks: Task[]
   pendingCount: number
+  streak: number
   // pet actions
   switchPet: (pet: Pet) => Promise<void>
   createPet: (dto: CreatePetDto) => Promise<Pet | undefined>
@@ -36,7 +38,7 @@ interface PetContextValue {
   toggleTask: (id: number) => Promise<void>
   deleteTask: (id: number) => Promise<void>
   // record actions
-  createNote: (text: string, photoUrl: string | null) => Promise<boolean>
+  createNote: (text: string, photoUrl: string | null, type?: string) => Promise<boolean>
   deleteRecord: (id: number) => Promise<void>
   // vet actions
   createVet: (dto: CreateVetContactDto) => Promise<VetContact | undefined>
@@ -64,17 +66,22 @@ export function PetProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [recordsVersion, setRecordsVersion] = useState(0)
   const [modal, setModal] = useState<Record<ModalKey, boolean>>({
-    addPet: false, addTask: false, addVet: false, addMeasurement: false,
+    addPet: false, addTask: false, addVet: false, addMeasurement: false, passport: false,
   })
 
   const openModal = (key: ModalKey) => setModal(m => ({ ...m, [key]: true }))
   const closeModal = (key: ModalKey) => setModal(m => ({ ...m, [key]: false }))
 
+  // Id of the pet whose data we want on screen. Switching pets quickly must
+  // not let a slower, older response overwrite the newer pet's data.
+  const activePetId = useRef<number | null>(null)
+
   const loadPetData = useCallback(async (pet: Pet) => {
+    activePetId.current = pet.id
     const data = await run(() => Promise.all([
       tasksApi.list(pet.id), recordsApi.list(pet.id), measurementsApi.list(pet.id),
     ]))
-    if (data) {
+    if (data && activePetId.current === pet.id) {
       setTasks(data[0]); setRecords(data[1]); setMeasurements(data[2])
       setRecordsVersion(v => v + 1)
     }
@@ -110,6 +117,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
     if (pet) {
       setPets(prev => [...prev, pet])
       setCurrentPet(pet)
+      activePetId.current = pet.id
       setTasks([]); setRecords([]); setMeasurements([]); setRecordsVersion(v => v + 1)
       toast('Улюбленця додано', 'success')
     }
@@ -137,7 +145,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
   }, [currentPet])
 
   const deletePet = useCallback(async () => {
-    if (!currentPet || !confirm(`Видалити ${currentPet.name}? Всі дані буде втрачено.`)) return
+    if (!currentPet) return
     const ok = await run(() => petsApi.delete(currentPet.id))
     if (!ok) return
     toast(`${currentPet.name} видалено`, 'success')
@@ -158,9 +166,12 @@ export function PetProvider({ children }: { children: ReactNode }) {
     return task
   }, [currentPet])
 
+  // Optimistic: flip immediately for a snappy checkbox, roll back on failure.
   const toggleTask = useCallback(async (id: number) => {
+    const flip = (list: Task[]) => list.map(t => t.id === id ? { ...t, is_done: !t.is_done } : t)
+    setTasks(flip)
     const updated = await run(() => tasksApi.toggle(id))
-    if (updated) setTasks(prev => prev.map(t => t.id === id ? updated : t))
+    setTasks(prev => updated ? prev.map(t => t.id === id ? updated : t) : flip(prev))
   }, [])
 
   const deleteTask = useCallback(async (id: number) => {
@@ -168,10 +179,10 @@ export function PetProvider({ children }: { children: ReactNode }) {
     if (ok) { setTasks(prev => prev.filter(t => t.id !== id)); toast('Завдання видалено', 'success') }
   }, [])
 
-  const createNote = useCallback(async (text: string, photoUrl: string | null) => {
+  const createNote = useCallback(async (text: string, photoUrl: string | null, type = 'Нотатка') => {
     if (!currentPet) return false
     const record = await run(() => recordsApi.create(currentPet.id, {
-      record_type: 'Нотатка',
+      record_type: type,
       text: text.trim() || undefined,
       photo_url: photoUrl || undefined,
     }))
@@ -225,17 +236,14 @@ export function PetProvider({ children }: { children: ReactNode }) {
   }, [settings])
 
   // ── Derived values ───────────────────────────────────────────────────────────
-  const todayTasks = useMemo(() => tasks.filter(t => {
-    const d = new Date(t.task_time)
-    const now = new Date()
-    return d.toDateString() === now.toDateString() || d <= now
-  }), [tasks])
+  const todayTasks = useMemo(() => selectTodayTasks(tasks), [tasks])
+  const streak = useMemo(() => careStreak(tasks), [tasks])
 
   const pendingCount = useMemo(() => todayTasks.filter(t => !t.is_done).length, [todayTasks])
 
   const value: PetContextValue = {
     pets, currentPet, tasks, records, vets, measurements, settings, loading, recordsVersion,
-    todayTasks, pendingCount,
+    todayTasks, pendingCount, streak,
     switchPet, createPet, updateProfile, updatePetPhoto, deletePet,
     createTask, toggleTask, deleteTask,
     createNote, deleteRecord,

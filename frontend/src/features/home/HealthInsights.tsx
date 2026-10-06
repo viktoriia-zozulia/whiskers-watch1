@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Brain, Loader2 } from 'lucide-react'
 import { usePet } from '../../hooks/usePet'
-import { computeHealthData, insightCfg } from './lib/healthAnalysis'
+import { computeHealthData, insightCfg } from './healthAnalysis'
 
 function HealthScoreGauge({ score }: { score: number }) {
   const r = 36
@@ -12,7 +12,7 @@ function HealthScoreGauge({ score }: { score: number }) {
   return (
     <div className="relative inline-flex items-center justify-center shrink-0" style={{ width: 80, height: 80 }}>
       <svg viewBox="0 0 88 88" className="absolute inset-0 w-full h-full" style={{ transform: 'rotate(135deg)' }}>
-        <circle cx="44" cy="44" r={r} fill="none" stroke="#f1f5f9" strokeWidth="8"
+        <circle cx="44" cy="44" r={r} fill="none" stroke="currentColor" className="text-slate-100" strokeWidth="8"
           strokeLinecap="round" strokeDasharray={`${circ * 0.75} ${circ * 0.25}`} />
         <circle cx="44" cy="44" r={r} fill="none" stroke={color} strokeWidth="8"
           strokeLinecap="round" strokeDasharray={`${arc} ${circ - arc}`}

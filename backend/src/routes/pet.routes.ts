@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
 import { authMiddleware } from '../middlewares/auth'
+import { idParams } from '../schemas/common.schema'
 import { petService } from '../services/pet.service'
 import { createPetBody, updatePetBody } from '../schemas/pet.schema'
 
@@ -14,7 +15,7 @@ export const petRoutes = new Elysia({ prefix: '/api/pets' })
     const pet = await petService.findOwned(Number(params.id), userId!)
     if (!pet) return status(404, { error: 'Улюбленця не знайдено' })
     return pet
-  })
+  }, idParams)
 
   .put(
     '/:id',
@@ -31,7 +32,7 @@ export const petRoutes = new Elysia({ prefix: '/api/pets' })
         photo_url: body.photo_url !== undefined ? body.photo_url : pet.photo_url,
       })
     },
-    { body: updatePetBody },
+    { ...idParams, body: updatePetBody },
   )
 
   .delete('/:id', async ({ userId, params, status }) => {
@@ -39,4 +40,4 @@ export const petRoutes = new Elysia({ prefix: '/api/pets' })
     if (!pet) return status(404, { error: 'Улюбленця не знайдено' })
     await petService.remove(Number(params.id))
     return { ok: true }
-  })
+  }, idParams)

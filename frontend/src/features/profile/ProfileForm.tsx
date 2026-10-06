@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Camera, Loader2, Save } from 'lucide-react'
-import { uploadFile, type Pet, type UpdatePetDto } from '../../http_client'
+import { uploadFile, type Pet, type UpdatePetDto } from '../../api'
 import { usePet } from '../../hooks/usePet'
 import { run } from '../../shared/lib/toast'
 import { PetAvatar } from '../../shared/ui/PetAvatar'
 import { inputCls } from '../../shared/lib/styles'
+import { toDateInput } from '../../shared/lib/format'
 
 export function ProfileForm() {
   const { currentPet, updateProfile, updatePetPhoto } = usePet()
@@ -29,7 +30,17 @@ export function ProfileForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-    await updateProfile(form)
+    // Cleared optional fields must be sent as null — an empty string is not a
+    // valid DATE for Postgres and used to fail the whole save.
+    const blankToNull = (v: string | null | undefined) => (v?.trim() ? v.trim() : null)
+    await updateProfile({
+      name: form.name?.trim(),
+      species: form.species,
+      breed: blankToNull(form.breed),
+      birth_date: blankToNull(form.birth_date),
+      weight: form.weight ?? null,
+      allergies: blankToNull(form.allergies),
+    })
     setSaving(false)
   }
 
@@ -56,7 +67,7 @@ export function ProfileForm() {
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-1 space-y-2">
             <label className="text-sm font-medium text-slate-700">Кличка</label>
-            <input type="text" value={form.name ?? ''} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className={inputCls} />
+            <input type="text" value={form.name ?? ''} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required maxLength={60} className={inputCls} />
           </div>
           <div className="flex-1 space-y-2">
             <label className="text-sm font-medium text-slate-700">Вид</label>
@@ -73,7 +84,7 @@ export function ProfileForm() {
           </div>
           <div className="flex-1 space-y-2">
             <label className="text-sm font-medium text-slate-700">Дата народження</label>
-            <input type="date" value={form.birth_date ?? ''} onChange={e => setForm(p => ({ ...p, birth_date: e.target.value }))} className={inputCls} />
+            <input type="date" value={form.birth_date ?? ''} max={toDateInput()} onChange={e => setForm(p => ({ ...p, birth_date: e.target.value }))} className={inputCls} />
           </div>
         </div>
         <div className="space-y-2">

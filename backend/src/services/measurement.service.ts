@@ -10,7 +10,10 @@ export const measurementService = {
       .execute()
   },
 
-  /** Inserts a weight measurement and syncs the pet's current weight. */
+  /**
+   * Inserts a weight measurement and syncs the pet's current weight to the
+   * most recent one (back-filling an old weigh-in must not overwrite it).
+   */
   async create(petId: number, data: { date_measured: string; weight_kg: number; notes?: string }) {
     const measurement = await db
       .insertInto('measurements')
@@ -23,9 +26,17 @@ export const measurementService = {
       .returningAll()
       .executeTakeFirstOrThrow()
 
+    const latest = await db
+      .selectFrom('measurements')
+      .where('pet_id', '=', petId)
+      .orderBy('date_measured', 'desc')
+      .orderBy('id', 'desc')
+      .select('weight_kg')
+      .executeTakeFirstOrThrow()
+
     await db
       .updateTable('pets')
-      .set({ weight: data.weight_kg })
+      .set({ weight: latest.weight_kg })
       .where('id', '=', petId)
       .execute()
 

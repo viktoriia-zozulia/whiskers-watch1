@@ -2,6 +2,7 @@ export interface User {
   id: number
   email: string
   name: string
+  is_demo?: boolean
 }
 
 export interface AuthResponse {
@@ -22,4 +23,5 @@ export interface LoginDto {
 
 export interface AuthConfig {
   googleClientId: string
+  demoEnabled: boolean
 }

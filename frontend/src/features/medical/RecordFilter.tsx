@@ -1,6 +1,6 @@
 import { Search, X } from 'lucide-react'
 
-const TYPES = ['Нотатка', 'Симптом', 'Ліки', 'Вакцина', 'Лікар']
+export const RECORD_TYPES = ['Нотатка', 'Симптом', 'Ліки', 'Вакцина', 'Лікар']
 
 export function RecordFilter({
   type, search, onType, onSearch,
@@ -32,7 +32,7 @@ export function RecordFilter({
           className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${type === '' ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
           Всі
         </button>
-        {TYPES.map(t => (
+        {RECORD_TYPES.map(t => (
           <button key={t} onClick={() => onType(t)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${type === t ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
             {t}

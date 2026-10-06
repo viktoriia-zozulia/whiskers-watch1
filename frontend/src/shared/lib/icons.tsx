@@ -16,6 +16,7 @@ export function getRecordDot(type: string) {
   if (t.includes('vet') || t.includes('clinic') || t.includes('лікар')) return 'bg-blue-500'
   if (t.includes('pill') || t.includes('medication') || t.includes('ліки')) return 'bg-teal-500'
   if (t.includes('vaccine') || t.includes('вакцин')) return 'bg-purple-500'
-  if (t.includes('symptom') || t.includes('симптом') || t.includes('нотатк')) return 'bg-slate-400'
+  if (t.includes('symptom') || t.includes('симптом')) return 'bg-amber-500'
+  if (t.includes('нотатк')) return 'bg-slate-400'
   return 'bg-orange-400'
 }

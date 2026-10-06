@@ -1,6 +1,7 @@
-import { Activity, LogOut, Plus } from 'lucide-react'
+import { LogOut, Plus } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { usePet } from '../hooks/usePet'
+import { LogoMark } from '../shared/ui/Logo'
 
 // Shown when the logged-in user has no pets yet.
 export function WelcomePage() {
@@ -8,18 +9,16 @@ export function WelcomePage() {
   const { openModal } = usePet()
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="text-center max-w-sm">
-        <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Activity size={36} className="text-teal-600" />
-        </div>
-        <h2 className="text-2xl font-bold mb-2 text-slate-800">Вітаємо, {user?.name || 'друже'}!</h2>
-        <p className="text-slate-500 mb-6">Додайте свого першого улюбленця, щоб почати моніторинг здоров'я.</p>
+    <div className="min-h-screen bg-paper text-ink flex items-center justify-center p-5">
+      <div className="text-center max-w-md">
+        <LogoMark size={56} className="text-teal-600 mx-auto mb-6" />
+        <h1 className="font-serif text-3xl sm:text-4xl tracking-tight mb-3">Вітаємо, {user?.name || 'друже'}!</h1>
+        <p className="text-ink/70 mb-8 leading-relaxed">Додайте свого першого улюбленця — і можна вести картку здоров’я.</p>
         <button onClick={() => openModal('addPet')}
-          className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 mx-auto">
-          <Plus size={20} /> Додати улюбленця
+          className="inline-flex items-center gap-2 bg-ink text-paper px-6 py-3.5 rounded-full font-medium hover:bg-ink/85 transition-colors">
+          <Plus size={18} /> Додати улюбленця
         </button>
-        <button onClick={logout} className="mt-4 text-slate-400 hover:text-slate-600 text-sm flex items-center gap-1 mx-auto">
+        <button onClick={logout} className="mt-6 text-ink/50 hover:text-ink text-sm flex items-center gap-1.5 mx-auto transition-colors">
           <LogOut size={14} /> Вийти
         </button>
       </div>

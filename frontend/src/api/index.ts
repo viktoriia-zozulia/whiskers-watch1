@@ -1,7 +1,7 @@
 // Public surface of the HTTP layer — re-exports every service and model so
 // the rest of the app imports from a single, stable path.
 
-export { getToken, setToken, clearToken, uploadFile } from './client'
+export { getToken, setToken, clearToken, uploadFile, SESSION_EXPIRED_EVENT } from './client'
 
 export { authApi } from './auth/auth.service'
 export type { User, AuthResponse, LoginDto, RegisterDto, AuthConfig } from './auth/auth.models'

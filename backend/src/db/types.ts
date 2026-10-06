@@ -6,6 +6,8 @@ export interface UsersTable {
   password_hash: string | null
   name: string
   google_id: string | null
+  is_demo: Generated<boolean>
+  created_at: Generated<Date>
 }
 
 export interface UserSettingsTable {
@@ -61,6 +63,14 @@ export interface MeasurementsTable {
   notes: string | null
 }
 
+export interface UploadsTable {
+  name: string
+  user_id: number | null
+  mime: string
+  data: Buffer
+  created_at: Generated<Date>
+}
+
 export interface Database {
   users: UsersTable
   user_settings: UserSettingsTable
@@ -69,4 +79,5 @@ export interface Database {
   tasks: TasksTable
   medical_records: MedicalRecordsTable
   measurements: MeasurementsTable
+  uploads: UploadsTable
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { recordsApi, type MedicalRecord } from '../http_client'
+import { recordsApi, type MedicalRecord } from '../api'
 import { run } from '../shared/lib/toast'
 
 // Fetches a pet's medical history from the backend, applying server-side

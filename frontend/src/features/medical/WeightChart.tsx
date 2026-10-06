@@ -1,7 +1,12 @@
-import type { Measurement } from '../../http_client'
+import { useId } from 'react'
+import type { Measurement } from '../../api'
+import { parseDateOnly } from '../../shared/lib/format'
+
+const short = (d: string) => parseDateOnly(d).toLocaleDateString('uk-UA', { month: 'short', day: 'numeric' })
 
 // Smooth SVG sparkline of the last 12 weight measurements.
 export function WeightChart({ measurements }: { measurements: Measurement[] }) {
+  const gradId = `wg-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
   const sorted = [...measurements]
     .sort((a, b) => a.date_measured.localeCompare(b.date_measured))
     .slice(-12)
@@ -31,20 +36,22 @@ export function WeightChart({ measurements }: { measurements: Measurement[] }) {
   return (
     <div className="mt-2 space-y-1">
       <div className="flex items-center justify-between text-xs text-slate-400">
-        <span>{new Date(sorted[0]!.date_measured).toLocaleDateString('uk-UA', { month: 'short', day: 'numeric' })}</span>
-        <span>{new Date(sorted[sorted.length - 1]!.date_measured).toLocaleDateString('uk-UA', { month: 'short', day: 'numeric' })}</span>
+        <span>{short(sorted[0]!.date_measured)}</span>
+        <span className="font-medium text-slate-500">{minW} – {maxW} кг</span>
+        <span>{short(sorted[sorted.length - 1]!.date_measured)}</span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-20">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-20" role="img" aria-label="Графік ваги">
         <defs>
-          <linearGradient id="wGrad" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#0d9488" stopOpacity="0.3" />
             <stop offset="100%" stopColor="#0d9488" stopOpacity="0.02" />
           </linearGradient>
         </defs>
-        <path d={fillPath} fill="url(#wGrad)" />
+        <path d={fillPath} fill={`url(#${gradId})`} />
         <path d={linePath} fill="none" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {pts.map((pt, i) => (
           <g key={i}>
+            <title>{`${sorted[i]!.weight_kg} кг · ${short(sorted[i]!.date_measured)}`}</title>
             {i === pts.length - 1 && <circle cx={pt.x} cy={pt.y} r={8} fill="#0d9488" fillOpacity={0.12} />}
             <circle cx={pt.x} cy={pt.y} r={i === pts.length - 1 ? 4 : 2.5}
               fill={i === pts.length - 1 ? '#0d9488' : '#fff'} stroke="#0d9488" strokeWidth="2" />

@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
 import { authMiddleware } from '../middlewares/auth'
+import { idParams } from '../schemas/common.schema'
 import { petService } from '../services/pet.service'
 import { recordService } from '../services/record.service'
 import { createRecordBody, listRecordsQuery } from '../schemas/record.schema'
@@ -14,7 +15,7 @@ export const recordRoutes = new Elysia()
       if (!pet) return status(404, { error: 'Улюбленця не знайдено' })
       return recordService.listByPet(Number(params.id), { type: query.type, search: query.search })
     },
-    { query: listRecordsQuery },
+    { ...idParams, query: listRecordsQuery },
   )
 
   .post(
@@ -24,7 +25,7 @@ export const recordRoutes = new Elysia()
       if (!pet) return status(404, { error: 'Улюбленця не знайдено' })
       return recordService.create(Number(params.id), body)
     },
-    { body: createRecordBody },
+    { ...idParams, body: createRecordBody },
   )
 
   .delete('/api/records/:id', async ({ userId, params, status }) => {
@@ -32,4 +33,4 @@ export const recordRoutes = new Elysia()
     if (!record) return status(404, { error: 'Запис не знайдено' })
     await recordService.remove(record.id)
     return { ok: true }
-  })
+  }, idParams)

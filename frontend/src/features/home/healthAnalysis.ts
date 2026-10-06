@@ -1,4 +1,5 @@
-import type { Measurement, MedicalRecord, Pet, Task } from '../../../http_client'
+import type { Measurement, MedicalRecord, Pet, Task } from '../../api'
+import { ageInMonths, plural } from '../../shared/lib/format'
 
 // Rule-based "WhiskersAI" engine: derives a 0–100 health score and a list of
 // human-readable insights from the pet's medical card (profile + allergies),
@@ -21,13 +22,11 @@ const CRITICAL_KW = ['блювання', 'кров', 'судоми', 'не ди�
 const WARN_KW = ['кашель', 'чхання', 'млявість', 'не їсть', 'свербіж', 'хрипить', 'температур', 'діаре', 'пронос', 'кульга']
 const VET_KW = ['лікар', 'клінік', 'ветеринар', 'огляд', 'прийом']
 
-function daysAgo(iso: string) {
-  return Math.floor((Date.now() - new Date(iso).getTime()) / DAY)
-}
-
 export function computeHealthData(
   pet: Pet, records: MedicalRecord[], tasks: Task[], measurements: Measurement[],
+  now = new Date(),
 ): { score: number; insights: Insight[] } {
+  const daysAgo = (iso: string) => Math.floor((now.getTime() - new Date(iso).getTime()) / DAY)
   let score = 80
   const insights: Insight[] = []
   const lower = (s: string | null | undefined) => (s ?? '').toLowerCase()
@@ -38,7 +37,7 @@ export function computeHealthData(
     const delta = s[s.length - 1]!.weight_kg - s[s.length - 2]!.weight_kg
     if (delta <= -0.5) {
       score -= 15
-      insights.push({ sev: 'warning', title: 'Зниження ваги', desc: `${pet.name} схудла на ${Math.abs(delta).toFixed(2)} кг. Проконсультуйтесь з ветеринаром.` })
+      insights.push({ sev: 'warning', title: 'Зниження ваги', desc: `Вага ${pet.name} знизилась на ${Math.abs(delta).toFixed(2)} кг з останнього зважування. Проконсультуйтесь з ветеринаром.` })
     } else if (delta >= 1) {
       score -= 5
       insights.push({ sev: 'info', title: 'Набір ваги', desc: `Набрано ${delta.toFixed(2)} кг. Зверніть увагу на раціон.` })
@@ -72,7 +71,7 @@ export function computeHealthData(
   // ── Allergies from the medical card ──────────────────────────────────────────
   const allergies = lower(pet.allergies).trim()
   if (allergies && !['немає', 'ні', 'відсутні', '-'].includes(allergies)) {
-    insights.push({ sev: 'info', title: 'Алергії в картці', desc: `Враховуйте при підборі ліків та харчування: ${pet.allergies}.` })
+    insights.push({ sev: 'info', title: 'Алергії в картці', desc: `Враховуйте при підборі ліків та харчування: ${pet.allergies!.trim().replace(/[.\s]+$/, '')}.` })
   }
 
   // ── Veterinary check-up recency (from history) ───────────────────────────────
@@ -93,16 +92,16 @@ export function computeHealthData(
   }
 
   // ── Tasks: overdue and completion ────────────────────────────────────────────
-  const overdue = tasks.filter(t => !t.is_done && new Date(t.task_time) < new Date())
+  const overdue = tasks.filter(t => !t.is_done && new Date(t.task_time) < now)
   if (overdue.length > 0) {
     score -= Math.min(overdue.length * 5, 20)
-    insights.push({ sev: 'warning', title: `Пропущено ${overdue.length} завдань`, desc: `${overdue.slice(0, 2).map(t => t.title).join(', ')}${overdue.length > 2 ? ' та ін.' : ''}.` })
+    insights.push({ sev: 'warning', title: `Пропущено ${overdue.length} ${plural(overdue.length, ['завдання', 'завдання', 'завдань'])}`, desc: `${overdue.slice(0, 2).map(t => t.title).join(', ')}${overdue.length > 2 ? ' та ін.' : ''}.` })
   }
 
-  const todayAll = tasks.filter(t => new Date(t.task_time).toDateString() === new Date().toDateString())
+  const todayAll = tasks.filter(t => new Date(t.task_time).toDateString() === now.toDateString())
   if (todayAll.length > 0 && todayAll.every(t => t.is_done)) {
     score += 10
-    insights.push({ sev: 'good', title: 'День виконано на 100%', desc: `Усі ${todayAll.length} завдань сьогодні виконано. Чудово!` })
+    insights.push({ sev: 'good', title: 'День виконано на 100%', desc: `Усі завдання на сьогодні (${todayAll.length}) виконано. Чудово!` })
   }
 
   // ── Vaccination presence ─────────────────────────────────────────────────────
@@ -114,7 +113,7 @@ export function computeHealthData(
 
   // ── Age-based recommendations (medical card) ─────────────────────────────────
   if (pet.birth_date) {
-    const months = Math.floor((Date.now() - new Date(pet.birth_date).getTime()) / (30 * DAY))
+    const months = ageInMonths(pet.birth_date, now)
     if (months >= 84) insights.push({ sev: 'info', title: 'Похилий вік', desc: `У ${Math.floor(months / 12)} р. рекомендовані огляди кожні 6 міс. та контроль ваги.` })
     else if (months <= 6) insights.push({ sev: 'info', title: 'Малюк', desc: 'Не забудьте про первинну вакцинацію та обробку від паразитів.' })
   }

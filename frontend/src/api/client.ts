@@ -7,6 +7,19 @@ export const getToken = () => localStorage.getItem('ww_token')
 export const setToken = (t: string) => localStorage.setItem('ww_token', t)
 export const clearToken = () => localStorage.removeItem('ww_token')
 
+// ─── Session expiry ───────────────────────────────────────────────────────────
+
+// Fired when the server rejects our token (expired / user deleted), so the
+// auth layer can drop the session instead of showing a wall of error toasts.
+export const SESSION_EXPIRED_EVENT = 'ww:session-expired'
+
+function handleUnauthorized(res: Response, hadToken: boolean) {
+  if (res.status === 401 && hadToken) {
+    clearToken()
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
+  }
+}
+
 // ─── Fetch helper ─────────────────────────────────────────────────────────────
 
 export async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -25,6 +38,7 @@ export async function req<T>(method: string, path: string, body?: unknown): Prom
     throw new Error("Немає зв'язку з сервером. Перевірте підключення.")
   }
   if (!res.ok) {
+    handleUnauthorized(res, !!token)
     const err = await res.json().catch(() => ({}))
     throw new Error((err as { error?: string }).error ?? 'Сталася помилка. Спробуйте ще раз.')
   }
@@ -48,8 +62,12 @@ export async function uploadFile(file: File): Promise<string> {
     throw new Error("Немає зв'язку з сервером. Перевірте підключення.")
   }
   if (!res.ok) {
+    handleUnauthorized(res, !!token)
     const err = await res.json().catch(() => ({}))
-    throw new Error((err as { error?: string }).error ?? 'Не вдалося завантажити фото.')
+    const msg = res.status === 422
+      ? 'Підтримуються лише зображення JPG, PNG, WebP, GIF або AVIF до 5 МБ.'
+      : (err as { error?: string }).error
+    throw new Error(msg ?? 'Не вдалося завантажити фото.')
   }
   const data = (await res.json()) as { url: string }
   return data.url

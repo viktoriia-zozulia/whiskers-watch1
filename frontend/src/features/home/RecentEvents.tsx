@@ -9,10 +9,10 @@ export function RecentEvents() {
   const { go } = useNav()
 
   return (
-    <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200">
-      <div className="flex justify-between items-center mb-6">
+    <section className="bg-white rounded-3xl p-5 md:p-6 xl:p-8 shadow-sm border border-slate-200">
+      <div className="flex justify-between items-center gap-3 mb-6">
         <h2 className="text-lg md:text-xl font-bold">Останні події</h2>
-        <button onClick={() => go('medical')} className="text-teal-600 text-sm font-medium hover:underline flex items-center gap-1">
+        <button onClick={() => go('medical')} className="text-teal-600 text-sm font-medium hover:underline flex items-center gap-1 whitespace-nowrap shrink-0">
           Вся історія <ChevronRight size={14} />
         </button>
       </div>
